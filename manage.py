@@ -1,5 +1,6 @@
-
 import sys
+import os
+
 
 def main():
     try:
@@ -7,7 +8,9 @@ def main():
     except ImportError:
         raise ImportError('Flaskify module wasn\'t found')
 
-    command_handler(sys.argv)
+    os.environ.setdefault('SETTINGS_FILE', 'portfolio.settings_dev.Core')
+
+    command_handler('portfolio', sys.argv)
 
 
 if __name__ == '__main__':

@@ -15,7 +15,3 @@ class SQLAlchemyDB:
 
         self.Base = declarative_base()
         self.session = sessionmaker(bind=self.engine)
-        self.tables = []
-
-    def create_all(self):
-        self.Base.metadata.create_all(self.engine)

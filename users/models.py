@@ -1,8 +1,8 @@
-from portfolio import app
+from portfolio import engine
 from sqlalchemy import Column, Integer, String, Boolean
 
 
-class User(app.db.Base):
+class User(engine.app.db.Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)

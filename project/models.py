@@ -1,7 +1,10 @@
 from sqlalchemy import Column, Integer, String, Text
-from portfolio import app
+from portfolio import engine
 
-class Project(app.db.Base):
+Base = engine.app.db.Base
+
+
+class Project(Base):
     __tablename__ = 'projects'
 
     id = Column(Integer, primary_key=True)

@@ -1,6 +1,3 @@
-import os
-import sqlalchemy
-
 class Core:
     DEBUG = True
 
@@ -19,4 +16,3 @@ class Core:
         'project',
         'users'
     ]
-

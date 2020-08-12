@@ -1,3 +1,3 @@
-from flask import Flask
+from flaskify.core.app import FlaskEngine
 
-app = Flask(__name__)
+engine = FlaskEngine()
