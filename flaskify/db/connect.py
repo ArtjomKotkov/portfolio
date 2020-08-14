@@ -14,4 +14,13 @@ class SQLAlchemyDB:
             echo=DATABASE['echo'])
 
         self.Base = declarative_base()
-        self.session = sessionmaker(bind=self.engine)
+        self.session = sessionmaker(bind=self.engine)()
+
+    def get_session(self):
+        return self.session
+
+    def get_base(self):
+        return self.Base
+
+    def get_engine(self):
+        return self.engine

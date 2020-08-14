@@ -1,4 +1,6 @@
 class Core:
+
+
     DEBUG = True
 
     DATABASE = {
@@ -13,6 +15,12 @@ class Core:
     }
 
     INSTALLED_APPS = [
+		"images",
         'project',
         'users'
     ]
+
+    KRAKEN_IO_CREDENTIALS = {
+        'api_key': '4e79f6cad35ff6cc5373019e6d2eb1dc',
+        'api_secret': '4e79f6cad35ff6cc5373019e6d2eb1dc'
+    }

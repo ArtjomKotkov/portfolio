@@ -1,5 +1,6 @@
 flaskify.*
-
+portfolio/settigns*
+project/static/img
 
 # Created by https://www.toptal.com/developers/gitignore/api/pycharm,flask
 # Edit at https://www.toptal.com/developers/gitignore?templates=pycharm,flask

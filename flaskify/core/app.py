@@ -1,14 +1,15 @@
 import os
 
 from flask import Flask
+
 from flaskify.db.connect import SQLAlchemyDB
 from flaskify.apps.connect import register_apps
 
 
-class FlaskEngine:
+class FlaskEngine   :
     """Create core Flask engine instance, which contain app, and provides some methods :)"""
 
-    def __init__(self, name=__name__):
+    def __init__(self, name=__name__, ):
         self.app = Flask(name)
         self.app.config.from_object(os.environ.get('SETTINGS_FILE', 'portfolio.settings_dev.Core'))
 
@@ -18,6 +19,10 @@ class FlaskEngine:
 
     def database_connect(self):
         self.app.db = SQLAlchemyDB(self.app)
+
+        self.engine = self.app.db.get_engine()
+        self.session = self.app.db.get_session()
+        self.Base = self.app.db.get_base()
 
     def register_apps(self):
         register_apps(self.app)
