@@ -39,8 +39,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
             </template>
         </div>`,
         mounted: function () {
-            if (this.project.extension == 'py' && !this.$root.py_files.includes(this.full_path)) {
-                this.$root.py_files.push(this.full_path);
+            if (this.project.extension == 'py' && !(this.full_path in this.$root.py_files)) {
+                this.$root.py_files[this.full_path] = this;
+            } else if (this.project.extension == 'txt' && !this.$root.txt_files.includes(this.full_path)) {
+                this.$root.txt_files.push(this.full_path);
+            } else {
+                this.$root.folders.push(this.full_path);
             }
         },
         methods: {
@@ -69,6 +73,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     this.opened = true;
                 }
             },
+            execute: function () {
+                console.log(this.full_path + ' executed');
+            }
         },
         computed: {
             project_name: function () {
@@ -79,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 }
             },
             full_path: function () {
-                return this.path+"/"+this.project.name
+                return this.path != '' ? this.path+"/"+this.project.name : this.project.name
             }
         }
     })
@@ -257,8 +264,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
         },
         template: `
         <div id='topper' class='d-flex flex-row justify-content-end align-items-center'>
-            <div class='flex-grow-1'>D:\\Projects\\Portfolio</div>
-            <div id='close_redactor_button'>X</div>
+            <img src="/static/project/img/pyLime.png" class='ml-1' style='height: 16px;' alt="" />
+            <div class='flex-grow-1 pl-1 text-white-50'>PyLime editor</div>
+            <div id='close_redactor_button' @click='$emit("close")'>X</div>
         </div>`,
         methods: {
         }
@@ -305,19 +313,30 @@ document.addEventListener("DOMContentLoaded", function(event) {
         data: function () {
             return {
                 commands: [],
+                text: [],
                 command: '',
                 current: -1,
+                focus: false
             }
         },
         template: `
-        <div class='d-flex flex-column justify-content-end h-100'>
-            <div v-for='(command, index) in commands'>{{command}}</div>
-            <input type="text" class='d-block' id='console-input' @keyup.enter="submit" v-model='command' @keyup.up="load_command_up" @keyup.down="load_command_down"/>
+        <div class='d-flex flex-column justify-content-end h-100 p-1' @click='set_focus_input'>
+            <div v-for='(line, index) in text' v-html='line'></div>
+            <div class='d-flex flex-row'>
+                <div id='console-position'>{{path_text}}></div>
+                <div id='console-text'>{{this.command}}</div> 
+                <div id='console-caret' :class='{"console-caret-non-focus":!focus}'></div>
+                <input ref='console_input' type="text" id='console-input' @keyup.enter="submit" v-model='command' @keyup.up="load_command_up" @keyup.down="load_command_down" @blur="focus=false" @focus='focus=true' />
+            </div>
         </div>`,
         methods: {
+            set_focus_input: function () {
+                this.$refs.console_input.focus();
+            },
             submit: function () {
                 if (this.command != '' && this.command != null) {
                     this.commands.push(this.command);
+                    this.handle(this.command);
                     this.command = '';
                     this.current = this.commands.length-1;
                 }
@@ -334,6 +353,112 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     this.current ++;
                 }
             },
+            offFocus: function () {
+                this.focus = false;
+            },
+            handle: function (com) {
+                var com_separated = com.split(' ');
+                com_separated.forEach(function (currentValue, index, array) {
+                    if (currentValue == '') {
+                        com_separated.splice(index, 1);
+                    }
+                });
+                switch(com_separated[0]){
+                    case 'python':
+                        this.py_handler(com_separated[1]);
+                        break;
+                    case 'cd':
+                        this.cd_handler(com_separated[1]);
+                        break;
+                    case 'help':
+                        this.help_handler();
+                        break;
+                    default:
+                        this.text.push(`${com_separated[0]} is not recognized as an internal or external command, operable program or batch file.`);
+                        break;
+                }
+            },
+            help_handler: function () {
+                var help = [
+                    'Available commands:',
+                    '   cd - folders navigation',
+                    '   python - execute python scripts'
+                ]
+            },
+            py_handler: function (comm) {
+                var path = '';
+                pathStr = '';
+
+                // create current path str
+                this.$root.path.forEach(element => {
+                    if (pathStr != '') {
+                        pathStr = pathStr + '/' + element;
+                    } else {
+                        pathStr = element;
+                    }
+                });
+
+                //remove extension
+                if (comm.includes('.py')) {
+                    comm = comm.slice(0, comm.indexOf('.py'));
+                }
+
+                // create full path
+                if (pathStr.length == 0) {
+                    path = comm;
+                } else {
+                    path = pathStr+ '/' + comm;
+                }
+
+                if (!(path in this.$root.py_files)) {
+                    this.text.push(`python: can't open file '${comm}.py': [Errno 2] No such file or directory.`);
+                    return;
+                }
+
+                this.$root.py_files[path].execute();
+
+            },
+
+            cd_handler: function (comm) {
+                if (comm == '..') {
+                    if (this.$root.path.length == 0) {
+                        this.text.push('<div class="console-error-line">You don\'t have permission to move in the parent catalog.</div>')
+                        return;
+                    }
+                    this.$root.path.pop();
+                    return;
+                } 
+                pathStr = '';
+                this.$root.path.forEach(element => {
+                    if (pathStr != '') {
+                        pathStr = pathStr + '/' + element;
+                    } else {
+                        pathStr = element;
+                    }
+                })
+                var path = '';
+                if (pathStr.length == 0) {
+                    path = comm;
+                } else {
+                    path = pathStr+ '/' + comm;
+                }
+                if (comm == undefined) {
+                    this.text.push(this.$root.core_path+'/'+pathStr);
+                    return;
+                }
+                if (this.$root.folders.includes(path)) {
+                    comm.split('/').forEach(element => {
+                        this.$root.path.push(element);
+                    });
+                } else {
+                    this.text.push('The system cannot find the path specified.');
+                }
+            }
+        },
+        computed: {
+            path_text: function () {
+                return this.$root.core_path + '/' + this.$root.path.join('/')
+            }
         }
     }) 
 
@@ -342,11 +467,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
 	var main = Vue.component('main_', {
          data: function () {
             return {
+                open: true,
             }
         },
         template: `
-        <div class='d-flex flex-column' id='redactor_container'>
-        	<topper></topper>
+        <div v-if='open' class='d-flex flex-column' id='redactor_container'>
+        	<topper @close='open=false'></topper>
         	<div id='core_body' class='flex-grow-1 d-flex flex-row'>
             	<left_hub></left_hub>
 				<code_window></code_window>
@@ -361,7 +487,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
             opened_files: [],
             opened_files_hash: [],
             selected: null,
-            py_files: []
+            py_files: {},
+            txt_files: [],
+            folders: [],
+            core_path: "D:/Projects/Portfolio",
+            path: [],
         }
     })
 

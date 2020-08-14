@@ -17,7 +17,7 @@ body {
 #topper {
 	min-height: 1.5em;
 	line-height: 1.5em;
-	font-size: 0.7em;
+	font-size: 0.9em;
 	background-color: #545454;
 }
 
@@ -159,6 +159,37 @@ body {
 	background-color: #282923;
 	border: none;
 	outline: none;
+	caret-color: hsla(228, 4%, 24%, 0);
+	width: 0;
+    height: 0;
+    opacity: 0; 
+}
+
+#console-input:focus {
+	background-color: #891919;
+}
+
+@keyframes flashing {
+	from {background-color: white;}
+	49% {background-color: white;}
+	50% {background-color: hsla(228, 4%, 24%, 0);}
+	to {background-color: hsla(228, 4%, 24%, 0);}
+}
+
+#console-caret {
+	height: 24px;
+	width: 0.5em;
+	animation: flashing 1s infinite ease-in-out;
+}
+
+.console-caret-non-focus {
+	animation: none !important;
+	border: 1px solid white;
+	background-color: rgba(0,0,0,0);
+}
+
+.console-error-line {
+	color: #A42727;
 }
 
 .project {
