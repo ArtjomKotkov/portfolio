@@ -15,9 +15,7 @@ class Core:
     }
 
     INSTALLED_APPS = [
-		"images",
         'project',
-        'users'
     ]
 
     KRAKEN_IO_CREDENTIALS = {

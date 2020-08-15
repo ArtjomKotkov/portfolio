@@ -5,7 +5,6 @@ from flask import Flask
 from flaskify.db.connect import SQLAlchemyDB
 from flaskify.apps.connect import register_apps
 
-
 class FlaskEngine   :
     """Create core Flask engine instance, which contain app, and provides some methods :)"""
 

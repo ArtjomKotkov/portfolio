@@ -1,5 +1,47 @@
 
 
+
+
+
+
+
+var pattern = `<span style='color: #66d9ef;'>from</span> portfolio <span style='color: #66d9ef;'>import</span> show
+
+PROJECT_NAME <span style='color: #f92672;'>=</span> <span style='color: #e6db74;'>"<name>"</span>
+
+DESCRIPTION <span style='color: #f92672;'>=</span> <span style='color: #e6db74;'>"""</span>
+<description>
+<span style='color: #e6db74;'>"""</span>
+
+GIT_URL <span style='color: #f92672;'>=</span> <span style='color: #e6db74;'>"<git_url>"</span>
+
+TECHNOLOGIES_STACK <span style='color: #f92672;'>=</span> [
+<stack>
+]
+
+SERVICES_STACK <span style='color: #f92672;'>=</span> [
+<services>
+]
+
+MAIN_TEXT <span style='color: #f92672;'>=</span> <span style='color: #e6db74;'>"""</span>
+<text>
+<span style='color: #e6db74;'>"""</span>
+
+<span style='color: #66d9ef;'>if</span> __name__ <span style='color: #f92672;'>==</span> <span style='color: #e6db74;'>'__main__'</span><span style='color: #f92672;'>:</span>
+<span style='color: #66d9ef;'>show</span>(DESCRIPTION, GIT_URL, TECHNOLOGIES_STACK, SERVICES_STACK, MAIN_TEXT)`
+
+var portfolio_pattern = `ыфвпфывпрыфвпвыф
+asfasfasfasfasfasgasdg
+asdgasdgsadgsadg`
+
+var patterns = {
+    'project_py': pattern,
+    'portfolio': portfolio_pattern
+}
+
+var tab_symb = "    ";
+
+
 document.addEventListener("DOMContentLoaded", function(event) { 
 
 // LEFT HUB =========================================================================================================//
@@ -13,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             path: {
                 type: String,
                 default: ''
-            }
+            },
         },
         
         data: function () {
@@ -35,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 <a class='d-block flex-grow-1 base_hub_line' href='#'>{{project_name}}</a>
             </div>
             <template  v-if='project.isfolder && "content" in project'>
-                    <base_hub_line v-show='opened' v-for='(item, index) in project.content' :deep='deep+1' :project='item' :path='full_path'></base_hub_line>
+                <base_hub_line v-show='opened' v-for='(item, index) in project.content' :deep='deep+1' :project='item' :path='full_path'></base_hub_line>
             </template>
         </div>`,
         mounted: function () {
@@ -56,12 +98,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     if (!(this.$root.opened_files_hash.includes(this.project.name))) {
                         this.$root.opened_files_hash.push(this.project.name);
 
-                        let data = {
-                            name: this.project.name,
-                            data: this.project.text
-                        }
-
-                        this.$root.opened_files.push(data);
+                        this.$root.opened_files.push(this.project);
                         this.$root.selected = this.$root.opened_files.length-1;
                     }
                 }
@@ -141,6 +178,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     extension:'py',
                     text: 'test_text',
                     isfolder: false,
+                    pattern: 'portfolio'
                 }
             }
         },
@@ -150,7 +188,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 <slot><span id='folder_text'>FOLDERS:</span></slot>
                 <projects></projects>
                 <base_hub_line :project='readme' :deep='0'></base_hub_line>
-                <base_hub_line :project='portfolio' :deep='0'></base_hub_line>
+                <base_hub_line :project='portfolio' :deep='0' pattern='portfolio'></base_hub_line>
             </div>
             <div id='left_hub_right_edge' ref='right_edge' @mousedown='resize'></div>
         </div>`,
@@ -179,13 +217,90 @@ document.addEventListener("DOMContentLoaded", function(event) {
         <div id='code_window' class='flex-grow-1'>
             <sub_header></sub_header>
             <div id='code_box' v-if='$root.opened_files[$root.selected] != null'>
-                <code_line v-for='(line, index) in $root.opened_files[$root.selected].data' :text='line' :index='index+1'></code_line>
+                <code_line v-for='(line, index) in pattern' :text='line' :index='index+1'></code_line>
             </div>
         </div>`,
         computed: {
             file: function () {
-                var array = this.$root.opened_files[this.$root.selected].data.split('\n')
+                var array = this.$root.opened_files[this.$root.selected].text.split('\\n')
                 return array
+            },
+            pattern: function () {
+                console.log(this.$root.opened_files[this.$root.selected].pattern)
+                var new_pattern = this.$root.opened_files[this.$root.selected].pattern == null ? patterns.project_py : patterns[this.$root.opened_files[this.$root.selected].pattern];
+                if (new_pattern !== pattern) {
+                    return new_pattern.split('\n')
+                }
+
+                var list_to_change_text = {
+                    'name': 0,
+                    'git_url': 0,
+                    'description': 1,
+                    'text': 1
+                };
+                for (var key in list_to_change_text) {
+                    console.log(list_to_change_text[key])
+                    new_pattern = this.make_text(list_to_change_text[key], key, new_pattern, 'span', 'style="color: #e6db74;"');
+                }
+            
+                var list_to_split_list = {
+                    'stack': 1,
+                    'services': 1,
+                };
+                for (var key in list_to_split_list) {
+                    new_pattern = this.make_dict(list_to_change_text[key], key, new_pattern, 'span', 'style="color: #e6db74;"');
+                }
+
+                new_pattern = new_pattern.split('\n')
+                return new_pattern
+            }
+        },
+        methods: {
+            insert_instead: function (string_, text_instead, new_text) {
+                var text_instead_index_start = string_.indexOf(text_instead);
+                if (text_instead_index_start == -1) {
+                    return string_
+                }
+                var text_instead_index_end = text_instead_index_start + text_instead.length;
+                var text_first_part = string_.slice(0, text_instead_index_start);
+                var text_second_part = string_.slice(text_instead_index_end);
+                if (text_instead == '') {
+                    return text_first_part + text_second_part
+                }
+                return text_first_part + new_text + text_second_part
+            },
+            make_text: function(offset, item, new_pattern, wrap_tag, style) {
+                if (!(item in this.$root.opened_files[this.$root.selected]) || this.$root.opened_files[this.$root.selected][item] == null) {
+                    return new_pattern;
+                }
+
+                var cur_stat = this.$root.opened_files[this.$root.selected][item].split('\\n');
+                var new_cur_stat = [];
+
+                cur_stat.forEach((item) => {
+                    var str = `<${wrap_tag} ${style}>`+tab_symb.repeat(offset)+item+`</${wrap_tag}>`;
+                    new_cur_stat.push(str);
+                })
+
+                cur_stat = new_cur_stat.join('\n');
+                //console.log(cur_stat);
+                cur_stat = this.insert_instead(new_pattern, '<'+item+'>', cur_stat);
+                return cur_stat
+            },
+            make_dict: function(offset, item, new_pattern, wrap_tag, style) {
+                if (!(item in this.$root.opened_files[this.$root.selected]) || this.$root.opened_files[this.$root.selected][item] == null) {
+                    return new_pattern;
+                }
+                var cur_stat = this.$root.opened_files[this.$root.selected][item];
+                var new_cur_stat = [];
+                cur_stat.forEach((item) => {
+                    var str = `<${wrap_tag} ${style}>`+tab_symb.repeat(offset)+'"'+item+'"'+`</${wrap_tag}>`+',';
+                    new_cur_stat.push(str);
+                })
+                cur_stat = new_cur_stat.join('\n');
+                console.log(cur_stat)
+                cur_stat = this.insert_instead(new_pattern, '<'+item+'>', cur_stat);
+                return cur_stat
             }
         }
     })
@@ -229,16 +344,45 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
     }) 
 
+    var res = Vue.compile(`<div class='d-flex flex-row code_row'>
+            <div style='width: 35px; height:100%; text-align:right; padding-right: 5px; margin-right:5px;'>{{index}}</div>
+            <div style='white-space: pre;' v-html='text'></div>
+        </div>`)
+
     var code_editor_line = Vue.component('code_line', {
         props: ['text', 'index'],
          data: function () {
             return {
             }
         },
+        // template: `
+        // <div class='d-flex flex-row code_row'>
+        //     <div style='width: 35px; height:100%; text-align:right; padding-right: 5px; margin-right:5px;'>{{index}}</div>
+        //     <div style='white-space: pre;' v-html='text'></div>
+        // </div>`,
+        render: res.render,
+        staticRenderFns: res.staticRenderFns,
+        computed: {
+            text_compile: function () {
+                return this.text.includes('imgpl') ? Vue.compile(this.text).render() : this.text
+            }
+        },
+        methods: {
+            wrap: function (tag, string) {
+                return `<${tag}>${string}</${tag}>`
+            }
+        }
+    })
+
+    var image_plus = Vue.component('imgpl', {
+        props: ['src'],
+         data: function () {
+            return {
+            }
+        },
         template: `
-        <div class='d-flex flex-row code_row'>
-            <div style='width: 35px; height:100%; text-align:right; padding-right: 5px; margin-right:5px;'>{{index}}</div>
-            <div>{{text}}</div>
+        <div>
+            <img :src="src"/>
         </div>`
     }) 
 

@@ -12,7 +12,9 @@ class Project(Base):
     description = Column(String)
     git_url = Column(String)
     text = Column(Text)
-    stack = Column(ARRAY(Integer), default=[])
+    stack = Column(ARRAY(String), default=[])
+    services = Column(ARRAY(String), default=[])
+    images = Column(ARRAY(String), default=[])
 
     def to_dict(self):
         return dict(
@@ -21,4 +23,7 @@ class Project(Base):
             description=self.description,
             git_url=self.git_url,
             text=self.text,
+            stack=self.stack,
+            images=self.images,
+            services=self.services
         )
