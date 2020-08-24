@@ -1,14 +1,11 @@
 
 
+var pattern = `<span style='color: #66d9ef;'>import</span> portfolio
 
-
-
-
-
-var pattern = `<span style='color: #66d9ef;'>from</span> portfolio <span style='color: #66d9ef;'>import</span> show
 
 PROJECT_NAME <span style='color: #f92672;'>=</span> <span style='color: #e6db74;'>"<name>"</span>
 
+<span style='color: #75715e;'># Чтобы получить более подробное описание, выполните запуск скрипта.</span>
 DESCRIPTION <span style='color: #f92672;'>=</span> <span style='color: #e6db74;'>"""</span>
 <description>
 <span style='color: #e6db74;'>"""</span>
@@ -23,20 +20,21 @@ SERVICES_STACK <span style='color: #f92672;'>=</span> [
 <services>
 ]
 
-MAIN_TEXT <span style='color: #f92672;'>=</span> <span style='color: #e6db74;'>"""</span>
-<text>
-<span style='color: #e6db74;'>"""</span>
 
 <span style='color: #66d9ef;'>if</span> __name__ <span style='color: #f92672;'>==</span> <span style='color: #e6db74;'>'__main__'</span><span style='color: #f92672;'>:</span>
-<span style='color: #66d9ef;'>show</span>(DESCRIPTION, GIT_URL, TECHNOLOGIES_STACK, SERVICES_STACK, MAIN_TEXT)`
+    <span style='color: #66d9ef;'>portfolio.show</span>(DESCRIPTION, GIT_URL, TECHNOLOGIES_STACK, SERVICES_STACK)`
 
 var portfolio_pattern = `ыфвпфывпрыфвпвыф
 asfasfasfasfasfasgasdg
 asdgasdgsadgsadg`
 
+var readme_pattern = `Hi this is my portfolio!
+You wanna play? Let's play!`
+
 var patterns = {
     'project_py': pattern,
-    'portfolio': portfolio_pattern
+    'portfolio': portfolio_pattern,
+    'readme': readme_pattern
 }
 
 var tab_symb = "    ";
@@ -57,7 +55,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 default: ''
             },
         },
-        
         data: function () {
             return {
                 opened: false
@@ -97,9 +94,16 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 } else {
                     if (!(this.$root.opened_files_hash.includes(this.project.name))) {
                         this.$root.opened_files_hash.push(this.project.name);
+                        if (this.path != '') {
+                            this.project.path = this.path + '/' + this.project.name;
+                        } else {
+                            this.project.path = this.project.name;
+                        }
 
                         this.$root.opened_files.push(this.project);
                         this.$root.selected = this.$root.opened_files.length-1;
+                    } else {
+                        this.$root.selected = this.$root.opened_files_hash.indexOf(this.project.name);
                     }
                 }
             },
@@ -111,6 +115,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 }
             },
             execute: function () {
+                if (this.project.extension == 'py' && this.project.is_project == true) {
+                    this.$root.full_project_desc = this.project;
+                }
                 console.log(this.full_path + ' executed');
             }
         },
@@ -142,6 +149,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 response.data.data.forEach(element => {
                     element.isfolder = false;
                     element.extension = 'py';
+                    element.is_project = true;
                     elements.push(element);
                 })
 
@@ -172,6 +180,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     extension:'txt',
                     text: 'test_text',
                     isfolder: false,
+                    pattern: 'readme'
                 },
                 portfolio: {
                     name:'portfolio',
@@ -215,7 +224,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         },
         template: `
         <div id='code_window' class='flex-grow-1'>
-            <sub_header></sub_header>
+            <sub_header v-if='$root.opened_files.length != 0'></sub_header>
             <div id='code_box' v-if='$root.opened_files[$root.selected] != null'>
                 <code_line v-for='(line, index) in pattern' :text='line' :index='index+1'></code_line>
             </div>
@@ -311,7 +320,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             }
         },
         template: `
-        <div id='sub-header-block' class='d-flex flex-row'> 
+        <div class='d-flex flex-row sub-header-block'> 
             <sub_header_file v-for='(file, index) in $root.opened_files' :file='file' :index='index'></sub_header_file>
         </div>
         `,
@@ -402,15 +411,27 @@ document.addEventListener("DOMContentLoaded", function(event) {
 //HEADER=============================================================================================================//
 //TOPPER=============================================================================================================//
     var topper = Vue.component('topper', {
+        props: {
+            logo: {
+                type: Boolean,
+                default: true
+            },
+            name: {
+                type: String,
+                default: 'PyLime editor'
+            },
+        },
         data: function () {
             return {
             }
         },
         template: `
-        <div id='topper' class='d-flex flex-row justify-content-end align-items-center'>
-            <img src="/static/project/img/pyLime.png" class='ml-1' style='height: 16px;' alt="" />
-            <div class='flex-grow-1 pl-1 text-white-50'>PyLime editor</div>
-            <div id='close_redactor_button' @click='$emit("close")'>X</div>
+        <div class='topper d-flex flex-row justify-content-end align-items-center'>
+            <img v-if='logo' src="/static/project/img/pyLime.png" class='ml-1' style='height: 16px;' alt="" />
+            <div class='flex-grow-1 pl-1 text-white-50'>{{name}}</div>
+            <div class='topper-control-buttons' style='background-color: #FA6058;' @click='$emit("close")'></div>
+            <div class='topper-control-buttons' style='background-color: #F9BC2D;'></div>
+            <div class='topper-control-buttons' style='background-color: #2ACB41;'></div>
         </div>`,
         methods: {
         }
@@ -605,8 +626,132 @@ document.addEventListener("DOMContentLoaded", function(event) {
             }
         }
     }) 
-
 //CONSOLE============================================================================================================//
+// TOP BUTTONS=======================================================================================================//
+
+    var main = Vue.component('under-top', {
+         data: function () {
+            return {
+            }
+        },
+        template: `
+            <div class='under-top-block d-flex flex-row justify-content-end align-items-center'>
+                <div class='pl-2 d-flex flex-row justify-content-start align-items-center'>
+                    <div v-for='(item, index) in path' class='path-block'>{{item}}</div>
+                </div>
+                <div class='flex-grow-1'></div>
+                <div class='top-button' @click='execute'>
+                    <img src="/static/project/img/play.png" class='d-block top-button-img' :class='{"top-button-deactivated":!is_executed}'/>
+                </div>
+                <div class='top-button'>
+                    <img src="/static/project/img/stop.png" class='d-block top-button-img' :class='{"top-button-deactivated":!is_executed}'/>
+                </div>
+            </div>`,
+        methods: {
+            execute: function () {
+                if (this.$root.selected == null) {return;}
+                if (!this.is_executed) {return;}
+                let path_key = this.$root.opened_files[this.$root.selected].path;
+                this.$root.py_files[path_key].execute();
+            }
+        },
+        computed: {
+            is_executed: function () {
+                if (this.$root.selected == null) {return false;}
+                var extensions = new Array("py");
+                return (extensions.includes(this.$root.opened_files[this.$root.selected].extension)) ? true : false;
+            },
+            path: function () {
+                 if (this.$root.selected == null) {return [];}
+                return this.$root.opened_files[this.$root.selected].path.split('/');
+            }
+        }
+    })
+
+// TOP BUTTONS=======================================================================================================//
+
+// PROJECT FULL DESCRIPTION =========================================================================================//
+
+    var project_full_description = Vue.component('project-full-description', {
+        data: function () {
+            return {
+            }
+        },
+        template: `
+        <div v-if='$root.full_project_desc != null' id='desc-block' class='d-flex flex-column'>
+            <topper :logo='false' :name='project.name' @close='$root.full_project_desc=null'></topper>
+            <div class='flex-grow-1 d-flex flex-column'> 
+                <div>{{project.name}}</div>
+                <div>Сервисы:</div>
+                <slider :datas='project.services'></slider>
+                <div>Описание:</div>
+                <div v-html='project.text' ></div>
+            </div>
+        </div>`,
+        computed: {
+            project: function () {
+                return this.$root.full_project_desc
+            }
+        }
+    })
+
+    var slider = Vue.component('slider', {
+        props: ['datas'],
+        data: function () {
+            return {
+                current: 0,
+                elements: [],
+                margin: 0,
+            }
+        },
+        template: `
+        <div v-if='datas != null && datas.length != 0' class='slider d-flex flex-row justify-content-start' @wheel.prevent="wheel" ref='slider'>
+            <div class='balast_div' ref='balast_div'></div>
+            <div ref='slider_elements' class='d-flex flex-row'>
+                <div v-for='(item, index) in datas' class='slider-item' :style='{"background-color": genRandomColor()}'>{{item}}</div>
+            </div>
+        </div>`,
+        methods: {
+            wheel: function(evt) {
+                var direction = null;
+                this.margin += evt.deltaY/3;
+                this.$refs.balast_div.style['margin-left'] = this.margin +'px';
+                this.fix_width();
+            },
+            fix_width: function() {
+                
+                if (this.margin > 0) {
+                    this.margin = 0;
+                    this.$refs.balast_div.removeAttribute('style');
+                }
+                var margin_balast = parseInt(this.$refs.balast_div.style['margin-left'].slice(0, -2));
+                var width_slider = parseInt(this.$refs.slider.offsetWidth);
+                var in_slider_width = parseInt(this.$refs.slider_elements.offsetWidth);
+                if (width_slider > (margin_balast+in_slider_width)) {
+                    this.margin = width_slider - in_slider_width;
+                    this.$refs.balast_div.style['margin-left'] = this.margin +'px';
+                }
+            },
+            componentToHex: function(c) {
+              var hex = c.toString(16);
+              return hex.length == 1 ? "0" + hex : hex;
+            },
+            rgbToHex: function(r, g, b) {
+
+              return "#" + this.componentToHex(r) + this.componentToHex(g) + this.componentToHex(b);
+            },
+            getRandomArbitrary: function(min, max) {
+                return parseInt(Math.random() * (max - min) + min);
+            },
+            genRandomColor: function() {
+                return this.rgbToHex(this.getRandomArbitrary(100,200), this.getRandomArbitrary(100,200), this.getRandomArbitrary(100,200));
+            }
+        }
+    })
+
+
+// PROJECT FULL DESCRIPTION =========================================================================================//
+
 
 	var main = Vue.component('main_', {
          data: function () {
@@ -617,25 +762,28 @@ document.addEventListener("DOMContentLoaded", function(event) {
         template: `
         <div v-if='open' class='d-flex flex-column' id='redactor_container'>
         	<topper @close='open=false'></topper>
+            <under-top></under-top>
         	<div id='core_body' class='flex-grow-1 d-flex flex-row'>
             	<left_hub></left_hub>
 				<code_window></code_window>
 			</div>
             <console></console>
+            <project-full-description></project-full-description>
         </div>`
     })
 
     var app = new Vue({
         el: '#app',
         data: {
-            opened_files: [],
-            opened_files_hash: [],
-            selected: null,
+            opened_files: [{"name":"readme","extension":"txt","text":"test_text","isfolder":false,"pattern":"readme","path":"readme"}],
+            opened_files_hash: ["readme"],
+            selected: 0,
             py_files: {},
             txt_files: [],
             folders: [],
             core_path: "D:/Projects/Portfolio",
             path: [],
+            full_project_desc: null
         }
     })
 
